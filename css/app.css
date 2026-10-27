@@ -553,3 +553,21 @@ select.inp{cursor:pointer}
 }
 .toasts{left:12px;right:12px;transform:none;max-width:none}
 .hol-fixed .hol-date{width:56px}
+
+/* Onboarding (ilk giriş tanıtımı) */
+.tour{position:fixed;inset:0;z-index:55}
+.tour-hole{position:fixed;border-radius:12px;box-shadow:0 0 0 9999px var(--color-scrim),0 0 0 2px var(--color-primary);pointer-events:none;transition:left .25s ease,top .25s ease,width .25s ease,height .25s ease}
+.tour.is-centered .tour-hole{box-shadow:0 0 0 9999px var(--color-scrim)}
+.tour-card{position:fixed;width:360px;max-width:calc(100vw - 24px);background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-lg);box-shadow:var(--shadow-md);padding:16px 18px 14px;display:flex;flex-direction:column;gap:8px;transition:left .25s ease,top .25s ease}
+.tour-top{display:flex;align-items:center;gap:8px}
+.tour-ic{width:28px;height:28px;border-radius:8px;background:var(--color-primary-soft);color:var(--color-link);display:grid;place-items:center}
+.tour-step{flex:1}
+.tour-skip{font-size:var(--font-size-sm)}
+.tour-card h2{font-size:var(--font-size-lg);font-weight:600;letter-spacing:-.01em;margin-top:4px}
+.tour-card p{color:var(--color-text-muted);font-size:13.5px;line-height:1.5}
+.tour-foot{display:flex;align-items:center;gap:6px;margin-top:6px;flex-wrap:wrap}
+.tour-dots{display:flex;gap:5px}
+.tour-dots span{width:6px;height:6px;border-radius:50%;background:var(--color-border)}
+.tour-dots span.is-on{width:16px;border-radius:3px;background:var(--color-primary)}
+@media (prefers-reduced-motion:reduce){.tour-hole,.tour-card{transition:none}}
+@media (max-width:767px){.tour-foot .btn{height:44px}}

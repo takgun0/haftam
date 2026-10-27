@@ -2,6 +2,10 @@
 
 Üniversite öğrencileri için tarayıcıda çalışan, sade bir haftalık program uygulaması.
 
+**Hemen dene:** https://takgun0.github.io/haftam/
+
+![Haftam haftalık görünüm](docs/screenshots/masaustu.png)
+
 - **Rutinler:** Ders programı gibi tekrarlayan etkinlikleri bir kez gir, dönem boyunca her hafta (ya da 2 haftada bir) kendiliğinden görünsün.
 - **Tek seferlik etkinlikler:** Yalnızca kendi haftasında görünür.
 - **Haftalık değişiklik:** Bir rutinin tek bir haftasını düzenle ya da iptal et; diğer haftalar etkilenmez.
@@ -12,6 +16,25 @@
 - **Ayarlar:** Dönem tarihleri, gün başlangıç/bitiş saati, hafta sonunu göster/gizle, tema (sistem/açık/koyu), kendi tatil günlerin (dini bayramlar gibi), veri işlemleri. 14 günden uzun süredir yedek alınmadıysa uyarı gösterilir.
 - **Yedek ve dışa aktarma:** JSON yedek al/yükle; **Takvime aktar (.ics)** ile Google, Apple veya Outlook takvimine aktar; A4 yatay, tek sayfalık haftalık tablo yazdır ya da PDF'e kaydet.
 - **Açık / koyu tema**, masaüstü ve mobil (< 768 px) yerleşim, klavye kısayolları.
+- **İlk giriş tanıtımı:** Siteye ilk girişte birkaç adımlık kısa bir tur ekranın önemli yerlerini gösterir. **Ayarlar › Görünüm › Tanıtım** ile tekrar izleyebilirsin.
+
+## Ekran görüntüleri
+
+| Etkinlik ekleme (satır içi çakışma uyarısı) | Etkinlik detayı |
+| --- | --- |
+| ![Rutin ekleme penceresi](docs/screenshots/etkinlik-ekle.png) | ![Etkinlik detay penceresi](docs/screenshots/detay.png) |
+| **Koyu tema** | **Ayarlar** |
+| ![Koyu tema](docs/screenshots/masaustu-koyu.png) | ![Ayarlar paneli](docs/screenshots/ayarlar.png) |
+| **İlk giriş tanıtımı** | **Yazdırma / PDF (A4 yatay)** |
+| ![İlk giriş tanıtımı](docs/screenshots/tanitim.png) | ![Yazdırma görünümü](docs/screenshots/yazdirma.png) |
+
+<p>
+  <img src="docs/screenshots/mobil-gun.png" alt="Mobil gün görünümü" width="260">
+  &nbsp;
+  <img src="docs/screenshots/mobil-yaklasan.png" alt="Mobil Yaklaşan sekmesi" width="260">
+</p>
+
+<sub>Ekran görüntülerindeki program örnek veridir.</sub>
 
 ### .ics dosyasını Google Takvim'e aktarma
 
@@ -77,7 +100,8 @@ js/dates.js           Tarih yardımcıları (yerel tarih bileşenleri; toISOStri
 js/holidays.js        Resmî tatiller
 js/export.js          JSON yedek, .ics, yazdırma
 js/validate.js        İçe aktarılan verinin şema doğrulaması
-js/ui/                Bileşenler (AppHeader, WeekGrid, EventBlock, UpcomingPanel, EventModal …)
+js/ui/                Bileşenler (AppHeader, WeekGrid, EventBlock, UpcomingPanel, EventModal, Onboarding …)
+docs/screenshots/     README ekran görüntüleri
 tests/                Tarayıcıda (ve Node'da) çalışan testler
 ```
 

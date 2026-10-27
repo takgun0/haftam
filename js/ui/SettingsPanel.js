@@ -161,7 +161,10 @@ export function openSettings({ getData, getNow, subscribe, actions }) {
           themes.map(([id, label, ic]) => h('button', {
             type: 'button', role: 'radio', class: s.theme === id ? 'is-on' : '', 'aria-checked': String(s.theme === id),
             dataset: { sk: `theme:${id}` }, onClick: () => actions.updateSettings((st) => { st.theme = id; }),
-          }, icon(ic, 'sm'), label)))));
+          }, icon(ic, 'sm'), label)))),
+      h('div', { class: 'srow' },
+        h('div', null, h('div', { class: 't' }, 'Tanıtım'), h('div', { class: 's' }, 'İlk açılıştaki kısa turu yeniden izle.')),
+        h('button', { type: 'button', class: 'btn', dataset: { sk: 'tour' }, onClick: () => { close(); actions.showTour(); } }, icon('info', 'sm'), 'Tekrar göster')));
   }
 
   function tatiller(data) {

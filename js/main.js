@@ -18,6 +18,7 @@ import { showToast } from './ui/Toast.js';
 import { UpcomingPanel } from './ui/UpcomingPanel.js';
 import { WeekGrid } from './ui/WeekGrid.js';
 import { enableDrag } from './ui/dragDrop.js';
+import { onboardingSeen, openOnboarding } from './ui/Onboarding.js';
 import { h, isTypingTarget } from './ui/dom.js';
 
 const app = document.getElementById('app');
@@ -234,7 +235,14 @@ const settingsActions = {
   },
   importBackup: () => importBackup(),
   clearAll: () => clearAll(),
+  showTour: () => startTour(),
 };
+
+function startTour() {
+  const { data, ui } = getState();
+  if (ui.mobile) setUI({ tab: 'gun' });
+  openOnboarding({ mobile: ui.mobile, hasData: hasData(data), onAddRoutine: () => openCreate({ kind: 'routine' }) });
+}
 
 async function importBackup() {
   const res = await pickJSONFile();
@@ -418,7 +426,7 @@ function scrollToMorning(el, data, days, now, todayISO) {
 function onKeydown(e) {
   if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey) return;
   if (isTypingTarget(e.target)) return;
-  if (document.querySelector('.overlay, .pop')) return;
+  if (document.querySelector('.overlay, .pop, .tour')) return;
   const key = e.key.toLocaleLowerCase('tr-TR');
   if (e.key === 'ArrowLeft') actions.prevWeek();
   else if (e.key === 'ArrowRight') actions.nextWeek();
@@ -451,6 +459,7 @@ function start() {
     showToast('Tarayıcı depolaması kullanılamıyor; değişiklikler kaydedilmeyecek.', { kind: 'error', timeout: 10000 });
   }
   requestPersist();
+  if (!onboardingSeen()) startTour();
 
   document.addEventListener('keydown', onKeydown);
   mqMobile.addEventListener('change', () => setUI({ mobile: mqMobile.matches }));
