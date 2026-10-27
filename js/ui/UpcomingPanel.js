@@ -1,5 +1,6 @@
 import { formatDayMonth, formatWeekdayShort } from '../dates.js';
 import { NextUpCard, relativeChip } from './NextUpCard.js';
+import { WeekSummary } from './WeekSummary.js';
 import { CATEGORY_ICONS, h, icon } from './dom.js';
 
 /** Yaklaşanları "Şu an / Bugün / Yarın / tarih" olarak gruplar. */
@@ -63,12 +64,12 @@ export function UpcomingList(items, onOpen) {
 }
 
 /** Masaüstü sağ panel. */
-export function UpcomingPanel({ items, onOpen, hasData }) {
+export function UpcomingPanel({ items, onOpen, hasData, summary, isCurrentWeek }) {
   const next = items.find((i) => !i.ongoing) || items[0];
   return h('aside', { class: 'up', 'aria-label': 'Yaklaşan' },
     h('div', { class: 'up-head' }, h('h2', null, 'Yaklaşan'), h('span', { class: 'muted up-sub' }, 'Önümüzdeki 7 gün')),
     hasData
-      ? [NextUpCard(next, { onOpen }), h('div', { class: 'up-list' }, UpcomingList(items, onOpen))]
+      ? [NextUpCard(next, { onOpen }), h('div', { class: 'up-list' }, UpcomingList(items, onOpen)), WeekSummary(summary, { isCurrentWeek })]
       : h('div', { class: 'up-empty' }, icon('calendar', 'lg'),
         h('span', null, 'Henüz yaklaşan etkinlik yok. İlk rutinini eklediğinde sıradaki etkinlik burada görünür.')));
 }

@@ -8,10 +8,11 @@ import { MobileDayPicker } from './MobileDayPicker.js';
 import { NextUpCard } from './NextUpCard.js';
 import { TimeColumn } from './TimeColumn.js';
 import { UpcomingList } from './UpcomingPanel.js';
+import { WeekSummary } from './WeekSummary.js';
 import { h, icon, logoMark } from './dom.js';
 
 /** Mobil (< 768px): gün görünümü + Yaklaşan sekmesi. */
-export function MobileView({ week, days, settings, now, todayISO, selectedISO, tab, upcoming, hasData, dark, termWeek, actions }) {
+export function MobileView({ week, days, settings, now, todayISO, selectedISO, tab, upcoming, hasData, dark, termWeek, summary, isCurrentWeek, backupDue, actions }) {
   const isDay = tab !== 'yaklasan';
   const day = days.find((d) => d.iso === selectedISO) || days[0];
   const todayLeft = upcoming.filter((u) => u.dayOffset === 0).length;
@@ -53,7 +54,7 @@ export function MobileView({ week, days, settings, now, todayISO, selectedISO, t
   } else {
     body = h('div', { class: 'm-body' },
       h('div', { class: 'm-list-head muted' }, `Önümüzdeki 7 gün · ${upcoming.length} etkinlik`),
-      h('div', { class: 'm-list' }, UpcomingList(upcoming, actions.openUpcoming)));
+      h('div', { class: 'm-list' }, UpcomingList(upcoming, actions.openUpcoming), WeekSummary(summary, { isCurrentWeek })));
   }
 
   return h('div', { class: 'm' },
@@ -64,5 +65,5 @@ export function MobileView({ week, days, settings, now, todayISO, selectedISO, t
       h('button', { type: 'button', class: ['tab', isDay && 'is-active'], 'aria-current': isDay ? 'page' : null, dataset: { fk: 'tab:gun' }, onClick: () => actions.setTab('gun') }, icon('calendar', 'lg'), 'Gün'),
       h('button', { type: 'button', class: ['tab', !isDay && 'is-active'], 'aria-current': !isDay ? 'page' : null, dataset: { fk: 'tab:yaklasan' }, onClick: () => actions.setTab('yaklasan') },
         icon('list', 'lg'), 'Yaklaşan', todayLeft > 0 && h('span', { class: 'tab-badge', 'aria-label': `bugün ${todayLeft} etkinlik` }, String(todayLeft))),
-      h('button', { type: 'button', class: 'tab', dataset: { fk: 'tab:ayarlar' }, onClick: actions.openSettings }, icon('settings', 'lg'), 'Ayarlar')));
+      h('button', { type: 'button', class: 'tab', dataset: { fk: 'tab:ayarlar' }, onClick: actions.openSettings }, icon('settings', 'lg'), 'Ayarlar', backupDue && h('span', { class: 'tab-dot', 'aria-label': 'yedek uyarısı' }))));
 }

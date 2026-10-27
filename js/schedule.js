@@ -39,13 +39,15 @@ export function routineOccursOn(routine, date) {
   return true;
 }
 
-function makeInstance(kind, src, iso) {
+function makeInstance(kind, src, iso, occurrenceDate = iso) {
   return {
-    key: `${kind}:${src.id}:${iso}`,
+    key: `${kind}:${src.id}:${occurrenceDate}`,
     kind,
     id: src.id,
     routineId: kind === 'routine' ? src.id : null,
     date: iso,
+    // Rutin örneğinin asıl (override öncesi) tarihi; override'lar bu tarihe bağlanır.
+    occurrenceDate: kind === 'routine' ? occurrenceDate : null,
     title: src.title,
     start: src.start,
     end: src.end,
@@ -66,36 +68,54 @@ function makeInstance(kind, src, iso) {
 
 const OVERRIDE_FIELDS = ['title', 'start', 'end', 'location', 'note'];
 
+function applyChanges(inst, changes) {
+  for (const f of OVERRIDE_FIELDS) {
+    if (changes[f] !== undefined) inst[f] = changes[f];
+  }
+  inst.startMin = timeToMinutes(inst.start);
+  inst.endMin = timeToMinutes(inst.end);
+  // Boş "modify", tatilde rutini yine de göstermek içindir.
+  inst.modified = Object.keys(changes).length > 0;
+}
+
 /**
  * Bir günün örnekleri: rutinler açılır, tek seferlikler eklenir, override'lar
- * uygulanır, tatil işaretlenir ve çakışma yerleşimi hesaplanır.
+ * uygulanır (changes.date ile başka güne taşınanlar dahil), tatil işaretlenir ve
+ * çakışma yerleşimi hesaplanır.
  */
 export function buildDay(iso, data) {
   const date = parseISODate(iso);
   const settings = data.settings || {};
   const holiday = getHoliday(iso, settings.customHolidays || []);
+  const overrides = data.overrides || [];
   const instances = [];
 
   for (const r of data.routines || []) {
     if (!routineOccursOn(r, date)) continue;
+    const ov = overrides.find((o) => o.routineId === r.id && o.date === iso);
+    const changes = ov && ov.action === 'modify' ? ov.changes || {} : null;
+    if (changes && changes.date && changes.date !== iso) continue; // bu hafta başka güne taşındı
     const inst = makeInstance('routine', r, iso);
-    const ov = (data.overrides || []).find((o) => o.routineId === r.id && o.date === iso);
     if (ov && ov.action === 'cancel') {
       inst.cancelled = true;
       inst.cancelReason = 'override';
-    } else if (ov && ov.action === 'modify') {
-      const changes = ov.changes || {};
-      for (const f of OVERRIDE_FIELDS) {
-        if (changes[f] !== undefined) inst[f] = changes[f];
-      }
-      inst.startMin = timeToMinutes(inst.start);
-      inst.endMin = timeToMinutes(inst.end);
-      // Boş "modify", tatilde rutini yine de göstermek içindir.
-      inst.modified = Object.keys(changes).length > 0;
+    } else if (changes) {
+      applyChanges(inst, changes);
     } else if (holiday) {
       inst.cancelled = true;
       inst.cancelReason = 'holiday';
     }
+    instances.push(inst);
+  }
+
+  // Başka günden bu güne taşınmış rutin örnekleri
+  for (const o of overrides) {
+    if (o.action !== 'modify' || !o.changes || o.changes.date !== iso || o.date === iso) continue;
+    const r = (data.routines || []).find((x) => x.id === o.routineId);
+    if (!r || !routineOccursOn(r, parseISODate(o.date))) continue;
+    const inst = makeInstance('routine', r, iso, o.date);
+    applyChanges(inst, o.changes);
+    inst.modified = true;
     instances.push(inst);
   }
 
@@ -118,10 +138,15 @@ export function layoutDay(instances) {
   let cluster = [];
   let clusterEnd = -1;
   let colEnds = [];
+  let clusterIndex = 0;
 
   const flush = () => {
     const cols = colEnds.length || 1;
-    for (const it of cluster) it.cols = cols;
+    for (const it of cluster) {
+      it.cols = cols;
+      it.cluster = clusterIndex;
+    }
+    clusterIndex++;
     for (let i = 0; i < cluster.length; i++) {
       for (let j = i + 1; j < cluster.length; j++) {
         const a = cluster[i], b = cluster[j];
@@ -189,19 +214,43 @@ export function getUpcoming(now, data, days = 7) {
   return out;
 }
 
-/** Bu haftanın kategori bazında toplam dakikaları (iptaller hariç). */
+/**
+ * Haftanın özeti: kategori bazında toplam dakika ve etkinlik sayısı (iptaller hariç),
+ * çakışma kümesi, iptal ve tatil günü sayıları.
+ */
 export function weekSummary(week) {
   const totals = Object.fromEntries(CATEGORIES.map((c) => [c, 0]));
   let count = 0;
+  let cancelled = 0;
+  let conflicts = 0;
+  let holidays = 0;
   for (const day of week.days) {
+    if (day.holiday) holidays++;
+    const clusters = new Set();
     for (const inst of day.instances) {
-      if (inst.cancelled) continue;
+      if (inst.cancelled) {
+        cancelled++;
+        continue;
+      }
       totals[inst.category] += inst.endMin - inst.startMin;
       count++;
+      if (inst.conflict) clusters.add(inst.cluster);
     }
+    conflicts += clusters.size;
   }
   const total = Object.values(totals).reduce((a, b) => a + b, 0);
-  return { totals, total, count };
+  return { totals, total, count, cancelled, conflicts, holidays };
+}
+
+/** Rutinin [from, until] aralığındaki gerçekleşme tarihleri (override'lar hariç). */
+export function routineOccurrences(routine, from = routine.validFrom, until = routine.validUntil) {
+  const out = [];
+  const start = from > routine.validFrom ? from : routine.validFrom;
+  const end = until < routine.validUntil ? until : routine.validUntil;
+  for (let iso = start; iso <= end; iso = addDaysISO(iso, 1)) {
+    if (routineOccursOn(routine, parseISODate(iso))) out.push(iso);
+  }
+  return out;
 }
 
 function daysLabel(days) {

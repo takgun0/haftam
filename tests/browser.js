@@ -1,6 +1,7 @@
-import { runTests } from './schedule.test.js';
+import { runTests as schedule } from './schedule.test.js';
+import { runTests as ics } from './ics.test.js';
 
-const results = runTests();
+const results = [...schedule(), ...ics()];
 const list = document.getElementById('results');
 let failed = 0;
 for (const r of results) {

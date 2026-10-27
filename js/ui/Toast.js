@@ -34,7 +34,9 @@ export function showToast(message, options = {}) {
     }, action.label));
   }
   el.append(h('button', { class: 'btn btn-icon toast-x', 'aria-label': 'Bildirimi kapat', onClick: close }, icon('x', 'sm')));
-  getContainer().append(el);
+  const box = getContainer();
+  while (box.children.length >= 3) box.firstElementChild.remove();
+  box.append(el);
   timer = setTimeout(close, timeout);
   return close;
 }

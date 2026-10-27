@@ -1,22 +1,23 @@
 // Başlatma ve olay bağlama.
 
-import { addDays, diffDays, minutesOfDay, minutesToTime, parseISODate, startOfWeek, toISODate } from './dates.js';
-import { downloadBackup, pickJSONFile, printWeek } from './export.js';
-import { buildWeek, getUpcoming, getWeekStart } from './schedule.js';
+import { addDays, DAY_SHORT, dayOfWeek, diffDays, formatDayMonth, formatWeekdayLong, isValidISODate, minutesOfDay, minutesToTime, parseISODate, startOfWeek, toISODate } from './dates.js';
+import { downloadBackup, downloadICS, pickJSONFile, printWeek } from './export.js';
+import { buildWeek, getUpcoming, getWeekStart, routineOccursOn, weekSummary } from './schedule.js';
 import { getState, initState, setUI, subscribe, undo, updateData, replaceData } from './state.js';
 import { emptyData, load, newId, requestPersist } from './storage.js';
-import { validateData } from './validate.js';
+import { LIMITS, validateData } from './validate.js';
 import { AppHeader } from './ui/AppHeader.js';
-import { confirmDialog } from './ui/ConfirmDialog.js';
+import { choiceDialog, confirmDialog } from './ui/ConfirmDialog.js';
 import { EmptyState } from './ui/EmptyState.js';
 import { computeRange } from './ui/EventBlock.js';
 import { openEventModal } from './ui/EventModal.js';
 import { closePopover, openPopover } from './ui/EventPopover.js';
 import { MobileView } from './ui/MobileView.js';
-import { openSettings } from './ui/SettingsPanel.js';
+import { backupDue, openSettings } from './ui/SettingsPanel.js';
 import { showToast } from './ui/Toast.js';
 import { UpcomingPanel } from './ui/UpcomingPanel.js';
 import { WeekGrid } from './ui/WeekGrid.js';
+import { enableDrag } from './ui/dragDrop.js';
 import { h, isTypingTarget } from './ui/dom.js';
 
 const app = document.getElementById('app');
@@ -104,10 +105,10 @@ const popoverActions = {
     const routine = findRoutine(inst.routineId);
     openEventModal({ mode: 'edit-routine', data: getState().data, today: getState().ui.now, routine, onSave: handleSave, onDelete: () => deleteRoutine(routine) });
   },
-  cancelWeek: (inst) => mutate((d) => setOverride(d, inst.routineId, inst.date, { action: 'cancel' }), { message: `${inst.title} bu hafta için iptal edildi`, undo: true }),
-  restoreWeek: (inst) => mutate((d) => setOverride(d, inst.routineId, inst.date, null), { message: 'İptal geri alındı', undo: true }),
-  showOnHoliday: (inst) => mutate((d) => setOverride(d, inst.routineId, inst.date, { action: 'modify', changes: {} }), { message: `${inst.title} tatil gününde de gösterilecek`, undo: true }),
-  resetWeek: (inst) => mutate((d) => setOverride(d, inst.routineId, inst.date, null), { message: 'Bu haftanın değişikliği geri alındı', undo: true }),
+  cancelWeek: (inst) => mutate((d) => setOverride(d, inst.routineId, inst.occurrenceDate, { action: 'cancel' }), { message: `${inst.title} bu hafta için iptal edildi`, undo: true }),
+  restoreWeek: (inst) => mutate((d) => setOverride(d, inst.routineId, inst.occurrenceDate, null), { message: 'İptal geri alındı', undo: true }),
+  showOnHoliday: (inst) => mutate((d) => setOverride(d, inst.routineId, inst.occurrenceDate, { action: 'modify', changes: {} }), { message: `${inst.title} tatil gününde de gösterilecek`, undo: true }),
+  resetWeek: (inst) => mutate((d) => setOverride(d, inst.routineId, inst.occurrenceDate, null), { message: 'Bu haftanın değişikliği geri alındı', undo: true }),
   deleteRoutine: (inst) => deleteRoutine(findRoutine(inst.routineId)),
   editEvent: (inst) => {
     const event = getState().data.events.find((e) => e.id === inst.id);
@@ -141,6 +142,99 @@ async function deleteEvent(event) {
   if (!ok) return;
   mutate((d) => { d.events = d.events.filter((e) => e.id !== event.id); }, { message: `“${event.title}” silindi`, undo: true });
 }
+
+// ---------- sürükle-bırak ----------
+
+function dayLabel(iso) {
+  const d = parseISODate(iso);
+  return `${DAY_SHORT[dayOfWeek(d) - 1]} ${formatDayMonth(d)}`;
+}
+
+async function handleDrop(inst, to) {
+  const where = `${dayLabel(to.date)} ${to.start}–${to.end}`;
+  if (inst.kind === 'event') {
+    mutate((d) => {
+      const e = d.events.find((x) => x.id === inst.id);
+      if (e) Object.assign(e, { date: to.date, start: to.start, end: to.end });
+    }, { message: `“${inst.title}” taşındı · ${where}`, undo: true });
+    return;
+  }
+  const routine = findRoutine(inst.routineId);
+  if (!routine) return;
+  const fromDow = dayOfWeek(parseISODate(inst.occurrenceDate));
+  const toDow = dayOfWeek(parseISODate(to.date));
+  const timeChanged = to.start !== routine.start;
+  const allSub = toDow !== fromDow
+    ? `Her hafta ${formatWeekdayLong(parseISODate(inst.occurrenceDate))} yerine ${formatWeekdayLong(parseISODate(to.date))}, ${to.start}–${to.end}`
+    : `Her hafta ${to.start}–${to.end}`;
+  const choice = await choiceDialog({
+    title: `“${inst.title}” taşınsın mı?`,
+    body: 'Bu bir rutin. Değişiklik hangi haftalara uygulansın?',
+    iconName: 'repeat',
+    options: [
+      { value: 'week', label: 'Sadece bu hafta', sub: where, primary: true },
+      { value: 'all', label: 'Tüm haftalar', sub: allSub + (timeChanged && routine.days.length > 1 ? ' (rutinin diğer günlerinin saati de değişir)' : '') },
+    ],
+  });
+  if (choice === 'week') {
+    mutate((d) => {
+      const prev = d.overrides.find((o) => o.routineId === routine.id && o.date === inst.occurrenceDate && o.action === 'modify');
+      const changes = { ...(prev ? prev.changes : {}), start: to.start, end: to.end, date: to.date };
+      if (changes.start === routine.start) delete changes.start;
+      if (changes.end === routine.end) delete changes.end;
+      if (changes.date === inst.occurrenceDate) delete changes.date;
+      setOverride(d, routine.id, inst.occurrenceDate, Object.keys(changes).length ? { action: 'modify', changes } : null);
+    }, { message: `Bu hafta taşındı · ${where}`, undo: true });
+  } else if (choice === 'all') {
+    mutate((d) => {
+      const r = d.routines.find((x) => x.id === routine.id);
+      r.start = to.start;
+      r.end = to.end;
+      if (toDow !== fromDow) r.days = [...new Set(r.days.filter((x) => x !== fromDow).concat(toDow))].sort((a, b) => a - b);
+      // Artık gerçekleşmeyen günlere bağlı haftalık değişiklikleri temizle
+      d.overrides = d.overrides.filter((o) => o.routineId !== r.id || routineOccursOn(r, parseISODate(o.date)));
+    }, { message: `Rutin güncellendi (tüm haftalar) · ${allSub}`, undo: true });
+  }
+}
+
+// ---------- ayarlar ----------
+
+const settingsActions = {
+  updateSettings: (fn) => persistOrWarn(updateData((d) => { fn(d.settings); }, { undoable: false })),
+  applyTermToRoutines: async () => {
+    const { settings, routines } = getState().data;
+    const ok = await confirmDialog({
+      title: 'Dönem tarihleri rutinlere uygulansın mı?',
+      body: `${routines.length} rutinin geçerliliği ${settings.termStart} – ${settings.termEnd} olarak değişecek.`,
+      confirmLabel: 'Uygula',
+    });
+    if (!ok) return;
+    mutate((d) => {
+      for (const r of d.routines) {
+        r.validFrom = d.settings.termStart;
+        r.validUntil = d.settings.termEnd;
+      }
+    }, { message: 'Rutinlerin geçerlilik tarihleri güncellendi', undo: true });
+  },
+  addHoliday: ({ date, name }) => {
+    if (!isValidISODate(date)) return 'Bir tarih seç.';
+    if (!name) return 'Tatilin adını yaz.';
+    if (name.length > LIMITS.holidayName) return `Ad en fazla ${LIMITS.holidayName} karakter olabilir.`;
+    if (getState().data.settings.customHolidays.some((x) => x.date === date)) return 'Bu tarihe zaten bir tatil eklemişsin.';
+    mutate((d) => { d.settings.customHolidays.push({ date, name }); }, { message: `${name} eklendi` });
+    return null;
+  },
+  removeHoliday: (date) => mutate((d) => {
+    d.settings.customHolidays = d.settings.customHolidays.filter((x) => x.date !== date);
+  }, { message: 'Tatil kaldırıldı', undo: true }),
+  backup: () => backup(),
+  exportICS: () => {
+    const name = downloadICS(getState().data);
+    showToast(`Takvim dosyası indirildi · ${name}`, { kind: 'ok' });
+  },
+  importBackup: () => importBackup(),
+  clearAll: () => clearAll(),
+};
 
 async function importBackup() {
   const res = await pickJSONFile();
@@ -251,7 +345,7 @@ const actions = {
     updateData((d) => { d.settings.theme = next; }, { undoable: false });
   },
   print: () => printWeek(),
-  openSettings: () => openSettings({ data: getState().data, now: getState().ui.now, actions: { backup, importBackup, clearAll } }),
+  openSettings: () => openSettings({ getData: () => getState().data, getNow: () => getState().ui.now, subscribe, actions: settingsActions }),
   importBackup,
 };
 
@@ -269,6 +363,9 @@ function render() {
   const termWeek = termWeekOf(data.settings, ui.weekStart);
   const dark = effectiveTheme(data) === 'dark';
   const mobile = ui.mobile && !printing;
+  const summary = weekSummary(week);
+  const isCurrentWeek = week.weekStart === toISODate(getWeekStart(now));
+  const due = backupDue(data, now);
 
   // Odak ve kaydırma konumunu koru.
   const active = document.activeElement;
@@ -277,16 +374,21 @@ function render() {
 
   let view;
   if (mobile) {
-    view = MobileView({ week, days, settings: data.settings, now, todayISO, selectedISO: ui.selectedISO, tab: ui.tab, upcoming, hasData: filled, dark, termWeek, actions });
+    view = MobileView({ week, days, settings: data.settings, now, todayISO, selectedISO: ui.selectedISO, tab: ui.tab, upcoming, hasData: filled, dark, termWeek, summary, isCurrentWeek, backupDue: due, actions });
   } else {
     const empty = !filled && EmptyState({ onAddRoutine: () => openCreate({ kind: 'routine' }), onImport: importBackup });
     view = h('div', { class: 'shell' },
-      AppHeader({ weekStart: ui.weekStart, termWeek, dark, upcomingOpen: ui.upcomingOpen, actions }),
+      AppHeader({ weekStart: ui.weekStart, termWeek, dark, upcomingOpen: ui.upcomingOpen, backupDue: due, actions }),
       h('div', { class: ['layout', ui.upcomingOpen && 'up-open'] },
         WeekGrid({ week, days, settings: data.settings, now, todayISO, onOpen: actions.openPopover, empty }),
-        UpcomingPanel({ items: upcoming, onOpen: openUpcoming, hasData: filled })));
+        UpcomingPanel({ items: upcoming, onOpen: openUpcoming, hasData: filled, summary, isCurrentWeek })));
   }
   app.replaceChildren(view);
+  if (!mobile && filled) {
+    const grid = app.querySelector('.wg');
+    const instances = new Map(days.flatMap((d) => d.instances.map((i) => [i.key, i])));
+    enableDrag(grid, { instances, days, range: computeRange(data.settings, days), onDrop: handleDrop });
+  }
 
   for (const el of app.querySelectorAll('[data-scroll]')) {
     const key = `${el.dataset.scroll}:${ui.weekStart.getTime()}`;

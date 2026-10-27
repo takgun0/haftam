@@ -243,6 +243,8 @@ function validateOverride(ctx, o, i, routinesById, seenKeys) {
         else if (f === 'title') changes[f] = text(ctx, where, 'başlık', raw[f], LIMITS.title, { required: true });
         else changes[f] = text(ctx, where, f === 'note' ? 'not' : 'konum', raw[f], f === 'note' ? LIMITS.note : LIMITS.location);
       }
+      // Yalnızca bu hafta başka bir güne taşıma
+      if (raw.date !== undefined) changes.date = date(ctx, where, 'taşınan tarih', raw.date);
       const s = changes.start || routine.start;
       const e = changes.end || routine.end;
       if (isValidTime(s) && isValidTime(e)) timeRange(ctx, where, s, e);

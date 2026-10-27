@@ -172,6 +172,31 @@ test('modify override: değişiklik uygulanır, modified: true', () => {
   eq(inst.title, 'İstatistik', 'değişmeyen alan korunur');
 });
 
+test('modify override changes.date: örnek yalnızca o hafta başka güne taşınır', () => {
+  const dt = data({
+    routines: [routine()],
+    overrides: [{ routineId: 'r1', date: '2026-11-02', action: 'modify', changes: { date: '2026-11-04', start: '13:00', end: '14:50' } }],
+  });
+  const w = S.buildWeek(d(2026, 11, 2), dt);
+  eq(w.days.map((x) => x.instances.length), [0, 0, 1, 0, 0, 0, 0]);
+  const inst = w.days[2].instances[0];
+  eq([inst.date, inst.occurrenceDate, inst.key, inst.start, inst.modified], ['2026-11-04', '2026-11-02', 'routine:r1:2026-11-02', '13:00', true]);
+  eq(S.buildWeek(d(2026, 11, 9), dt).days[0].instances.length, 1, 'sonraki hafta yerinde');
+});
+
+test('weekSummary: kategori toplamları, çakışma kümesi, iptal ve tatil', () => {
+  const dt = data({
+    routines: [routine({ days: [1, 4] })],
+    events: [event({ date: '2026-10-26', start: '10:00', end: '11:00', category: 'is' }), event({ id: 'e2', date: '2026-10-26', start: '10:30', end: '11:30', category: 'is' })],
+  });
+  const s = S.weekSummary(S.buildWeek(d(2026, 10, 26), dt));
+  eq([s.totals.ders, s.totals.is, s.count, s.cancelled, s.conflicts, s.holidays], [110, 120, 3, 1, 1, 1]);
+});
+
+test('routineOccurrences: aralık ve 2 haftada bir', () => {
+  eq(S.routineOccurrences(routine({ weekInterval: 2, validUntil: '2026-10-20' })), ['2026-09-21', '2026-10-05', '2026-10-19']);
+});
+
 test('tatil günü: gün işaretlenir, rutin tatil nedeniyle iptal', () => {
   const dt = data({ routines: [routine({ days: [4] })] });
   const day = S.buildWeek(d(2026, 10, 26), dt).days[3];

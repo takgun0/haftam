@@ -18,7 +18,7 @@ export function ThemeButton({ dark, onToggle, touch = false }) {
   }, icon(dark ? 'sun' : 'moon'));
 }
 
-export function AppHeader({ weekStart, termWeek, dark, upcomingOpen, actions }) {
+export function AppHeader({ weekStart, termWeek, dark, upcomingOpen, backupDue, actions }) {
   return h('header', { class: 'hdr' },
     h('div', { class: 'logo' }, logoMark(), h('span', null, 'Haftam')),
     WeekNavigator({ weekStart, onPrev: actions.prevWeek, onNext: actions.nextWeek }),
@@ -31,7 +31,8 @@ export function AppHeader({ weekStart, termWeek, dark, upcomingOpen, actions }) 
     }, icon('list', 'sm'), 'Yaklaşan'),
     h('button', { type: 'button', class: 'btn btn-ghost btn-icon', 'aria-label': 'Yazdır', title: 'Yazdır / PDF', dataset: { fk: 'print' }, onClick: actions.print }, icon('printer')),
     ThemeButton({ dark, onToggle: actions.toggleTheme }),
-    h('button', { type: 'button', class: 'btn btn-ghost btn-icon', 'aria-label': 'Ayarlar', dataset: { fk: 'settings' }, onClick: actions.openSettings }, icon('settings')),
+    h('button', { type: 'button', class: 'btn btn-ghost btn-icon btn-dot', 'aria-label': backupDue ? 'Ayarlar (yedek almanın zamanı geldi)' : 'Ayarlar', dataset: { fk: 'settings' }, onClick: actions.openSettings },
+      icon('settings'), backupDue && h('span', { class: 'dotw', 'aria-hidden': 'true' })),
     h('span', { class: 'hdr-sep', 'aria-hidden': 'true' }),
     h('button', { type: 'button', class: 'btn btn-primary', 'aria-keyshortcuts': 'N', title: 'Yeni etkinlik (N)', dataset: { fk: 'add' }, onClick: () => actions.openCreate() }, icon('plus', 'sm'), 'Etkinlik ekle'));
 }

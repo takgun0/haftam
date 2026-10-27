@@ -125,7 +125,7 @@ export function openEventModal(opts) {
     h('div', { class: 'trow' }, fromEl, h('span', { class: 'dash', 'aria-hidden': 'true' }, '–'), untilEl),
     errorSpan('validUntil'));
   const dateEl = input('date', { type: 'date', required: true, 'aria-describedby': `${uid}-date-err` });
-  const dateGroup = field('Tarih', dateEl, 'date');
+  const dateGroup = field('Tarih', dateEl, 'date', isOverride ? 'Yalnızca bu hafta taşınır' : null);
 
   // ---- çakışma uyarısı ----
   const conflictEl = h('div', { class: 'warn-inline', role: 'status', hidden: true });
@@ -163,12 +163,12 @@ export function openEventModal(opts) {
     saveBtn);
 
   const overrideNote = isOverride && h('div', { class: 'cancel-band' }, icon('edit-one', 'sm'),
-    `${formatDayTitle(parseISODate(f.date))} için geçerli. Diğer haftalar değişmez.`);
+    `${formatDayTitle(parseISODate(instance.occurrenceDate))} haftası için geçerli. Diğer haftalar değişmez.`);
 
   const body = h('div', { class: 'f-body' },
     seg, overrideNote,
     field('Başlık', titleEl, 'title'),
-    !isOverride && daysGroup, !isOverride && dateGroup,
+    !isOverride && daysGroup, dateGroup,
     h('div', { class: 'row2 row2-time' }, timeGroup, !isOverride && repeatGroup),
     conflictEl,
     !isOverride && validityGroup,
@@ -277,7 +277,7 @@ export function openEventModal(opts) {
       if (!isValidISODate(f.validFrom) || !isValidISODate(f.validUntil)) bad('validUntil', 'Geçerlilik tarihlerini gir.', fromEl);
       else if (f.validUntil < f.validFrom) bad('validUntil', 'Bitiş tarihi başlangıçtan önce olamaz.', untilEl);
     }
-    if (f.kind === 'event' && !isValidISODate(f.date)) bad('date', 'Geçerli bir tarih seç.', dateEl);
+    if (f.kind !== 'routine' && !isValidISODate(f.date)) bad('date', 'Geçerli bir tarih seç.', dateEl);
     if (firstBad) {
       firstBad.focus();
       return;
@@ -290,7 +290,8 @@ export function openEventModal(opts) {
       for (const k of ['title', 'start', 'end', 'location', 'note']) {
         if (common[k] !== (routine[k] || '')) changes[k] = common[k];
       }
-      result = { type: 'override', routineId: instance.routineId, date: f.date, changes };
+      if (f.date !== instance.occurrenceDate) changes.date = f.date;
+      result = { type: 'override', routineId: instance.routineId, date: instance.occurrenceDate, changes };
     } else if (f.kind === 'routine') {
       result = { type: 'routine', value: { id: f.id, ...common, days: f.days, category: f.category, validFrom: f.validFrom, validUntil: f.validUntil, weekInterval: f.weekInterval } };
     } else {
