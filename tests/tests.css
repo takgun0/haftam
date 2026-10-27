@@ -1,0 +1,6 @@
+body { font: 14px/1.5 system-ui, sans-serif; margin: 32px; color: #17171C; }
+h1 { font-size: 18px; }
+.ok { color: #1C5528; }
+.fail { color: #C8243A; font-weight: 600; }
+li { margin: 2px 0; }
+pre { margin: 4px 0 8px; font-size: 12px; white-space: pre-wrap; color: #87230F; }

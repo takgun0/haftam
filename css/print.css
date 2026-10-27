@@ -1,0 +1,101 @@
+/* Haftam — yazdırma / PDF: A4 yatay, tek sayfa, yalnızca haftalık tablo.
+   Siyah-beyaz yazıcıda da okunur: açık ton zemin + koyu kenarlık + kategori adı. */
+
+@page {
+  size: A4 landscape;
+  margin: 8mm;
+}
+
+@media print {
+  /* Tema ne olursa olsun açık, yüksek kontrastlı değerler */
+  html.hf,
+  html.hf[data-theme] {
+    --color-bg: #fff;
+    --color-surface: #fff;
+    --color-surface-2: #f2f2f2;
+    --color-border: #b5b5b5;
+    --color-text: #111;
+    --color-text-muted: #444;
+    --color-today-bg: #fff;
+    --color-holiday-bg: #fff;
+    --holiday-stripe: rgba(0, 0, 0, .16);
+    --cat-ders: #3D6FE0; --cat-ders-bg: #DCE6FB; --cat-ders-fg: #111;
+    --cat-is: #C2850C; --cat-is-bg: #F8EACB; --cat-is-fg: #111;
+    --cat-kisisel: #8858EE; --cat-kisisel-bg: #EAE2FB; --cat-kisisel-fg: #111;
+    --cat-sinav: #DD4F34; --cat-sinav-bg: #FADDD5; --cat-sinav-fg: #111;
+    --cat-sosyal: #3A9A4C; --cat-sosyal-bg: #DAEEDC; --cat-sosyal-fg: #111;
+    --cat-diger: #7A7A86; --cat-diger-bg: #E8E8EA; --cat-diger-fg: #111;
+    color-scheme: light;
+  }
+
+  .hf * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  html.hf, html.hf body, #app, .shell {
+    height: auto !important;
+    background: #fff !important;
+  }
+
+  .hdr, .up, .toasts, .overlay, .pop, .empty, .now, .now-faint, .now-label,
+  .fab, .tabbar, .m-hdr {
+    display: none !important;
+  }
+
+  .layout { display: block; }
+  .wg { display: block; background: #fff; }
+
+  .print-title {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 0 0 3mm;
+    font-size: 9pt;
+    color: #444;
+  }
+  .print-title b { font-size: 14pt; color: #111; }
+
+  .wg-scroll {
+    overflow: visible;
+    border: 1px solid #333;
+    border-radius: 3px;
+  }
+  .wg-head { position: static; height: auto; min-height: 9mm; border-bottom: 1px solid #333; }
+  .tz { visibility: hidden; }
+  .wg-body {
+    --hour: calc(168mm / var(--hours));
+    height: calc(var(--hours) * var(--hour));
+  }
+
+  .dh { padding: 1mm 2mm; gap: 0; }
+  .dh-date { font-size: 10pt; }
+  .dh.is-today .dh-date { background: none; color: #111; padding: 0; }
+  .dh.is-today .dh-name { color: #444; }
+  .dh-holiday { color: #444; font-size: 7pt; }
+  .dc.is-today { background-color: #fff; }
+  .tc-h span { font-size: 7pt; color: #333; }
+
+  .ev {
+    border: 1px solid #333 !important;
+    box-shadow: none !important;
+    transform: none !important;
+    font-size: 7.5pt;
+    padding: .8mm 1.2mm;
+    opacity: 1;
+  }
+  .ev .i, .ev-flag, .ev-warn { display: none; }
+  .ev-t, .ev.has-badge .ev-t, .ev.has-warn .ev-t { padding-right: 0; }
+  .ev-m { font-size: 7pt; opacity: 1; }
+  .ev-k {
+    display: block;
+    order: -1;
+    font-size: 5.5pt;
+    font-weight: 700;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    color: #333;
+  }
+  .ev.is-short .ev-k { display: none; }
+  .ev.is-cancelled { background: #fff !important; border-style: dashed !important; opacity: 1; color: #555; }
+}

@@ -1,0 +1,9 @@
+# Tasarımdan kopyalanan tek parça stil dosyası (css/tokens.css + css/app.css'e bölündü)
+/haftam.css
+
+node_modules/
+.DS_Store
+Thumbs.db
+*.log
+.vscode/
+.idea/

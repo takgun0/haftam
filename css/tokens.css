@@ -1,0 +1,101 @@
+/* Haftam — tasarım değişkenleri */
+
+.hf{
+  /* Tipografi */
+  --font-sans:"Inter",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --font-size-xs:11px;
+  --font-size-sm:12.5px;
+  --font-size-md:14px;
+  --font-size-lg:16px;
+  --font-size-xl:20px;
+  /* Yarıçap */
+  --radius-sm:6px;
+  --radius-md:10px;
+  --radius-lg:14px;
+  /* Boşluk */
+  --space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;
+  --space-5:20px;--space-6:24px;--space-7:32px;--space-8:40px;
+  /* Gölge */
+  --shadow-sm:0 1px 2px rgba(17,17,26,.06),0 0 0 1px rgba(17,17,26,.02);
+  --shadow-md:0 12px 32px -8px rgba(17,17,26,.18),0 2px 6px rgba(17,17,26,.06);
+  /* Renk — açık */
+  --color-bg:#F6F6F7;
+  --color-surface:#FFFFFF;
+  --color-surface-2:#F1F1F4;
+  --color-border:#E4E4E9;
+  --color-text:#17171C;
+  --color-text-muted:#5F5F6B;
+  --color-primary:#4B45D6;
+  --color-primary-contrast:#FFFFFF;
+  --color-danger:#C8243A;
+  --color-warning:#A85A06;
+  --color-now-line:#D6363E;
+  --color-today-bg:#F5F5FE;
+  --color-holiday-bg:#F8F3EA;
+  /* Ek (yardımcı) */
+  --color-primary-soft:#ECEBFC;
+  --color-link:#4B45D6;
+  --color-warning-soft:#FFF3DF;
+  --color-danger-soft:#FDEBED;
+  --color-now-text:#B0222A;
+  --color-scrim:rgba(18,18,28,.40);
+  --holiday-stripe:rgba(168,110,20,.14);
+  --hour:52px;
+  /* Kategoriler — vurgu / zemin / metin */
+  --cat-ders:#3D6FE0;   --cat-ders-bg:#E4ECFD;   --cat-ders-fg:#1A3780;
+  --cat-is:#C2850C;     --cat-is-bg:#FBEFD3;     --cat-is-fg:#663E03;
+  --cat-kisisel:#8858EE;--cat-kisisel-bg:#EFE8FD;--cat-kisisel-fg:#47208C;
+  --cat-sinav:#DD4F34;  --cat-sinav-bg:#FDE4DE;  --cat-sinav-fg:#87230F;
+  --cat-sosyal:#3A9A4C; --cat-sosyal-bg:#E0F2E2; --cat-sosyal-fg:#1C5528;
+  --cat-diger:#7A7A86;  --cat-diger-bg:#ECECEF;  --cat-diger-fg:#383842;
+
+  box-sizing:border-box;
+  font-family:var(--font-sans);
+  font-size:var(--font-size-md);
+  line-height:1.4;
+  color:var(--color-text);
+  background:var(--color-bg);
+  -webkit-font-smoothing:antialiased;
+  font-feature-settings:"cv11","ss03";
+  color-scheme:light;
+}
+
+.hf[data-theme="dark"]{
+  --shadow-sm:0 1px 2px rgba(0,0,0,.45);
+  --shadow-md:0 16px 40px -8px rgba(0,0,0,.65),0 0 0 1px rgba(255,255,255,.04);
+  --color-bg:#0F0F12;
+  --color-surface:#17171B;
+  --color-surface-2:#202027;
+  --color-border:#2B2B33;
+  --color-text:#ECECF1;
+  --color-text-muted:#9C9CA8;
+  --color-primary:#6A64F0;
+  --color-primary-contrast:#FFFFFF;
+  --color-danger:#FF6B78;
+  --color-warning:#F2A33A;
+  --color-now-line:#FF5A63;
+  --color-today-bg:#191A2B;
+  --color-holiday-bg:#1D1A15;
+  --color-primary-soft:#24224A;
+  --color-link:#AEAAFF;
+  --color-warning-soft:#2E2210;
+  --color-danger-soft:#33161B;
+  --color-now-text:#FF9AA0;
+  --color-scrim:rgba(0,0,0,.58);
+  --holiday-stripe:rgba(255,205,130,.07);
+  --cat-ders:#6E96FF;   --cat-ders-bg:#1B2747;   --cat-ders-fg:#C2D3FF;
+  --cat-is:#E3A72F;     --cat-is-bg:#33270E;     --cat-is-fg:#F7D892;
+  --cat-kisisel:#A584FF;--cat-kisisel-bg:#291F46;--cat-kisisel-fg:#DACBFF;
+  --cat-sinav:#FF7A5E;  --cat-sinav-bg:#3B1C15;  --cat-sinav-fg:#FFC5B7;
+  --cat-sosyal:#5CC06E; --cat-sosyal-bg:#16311D; --cat-sosyal-fg:#BAE8C1;
+  --cat-diger:#9A9AA6;  --cat-diger-bg:#25252C;  --cat-diger-fg:#D4D4DC;
+  color-scheme:dark;
+}
+
+/* Kategori eşleme: --bg / --fg / --ac */
+.c-ders{--bg:var(--cat-ders-bg);--fg:var(--cat-ders-fg);--ac:var(--cat-ders)}
+.c-is{--bg:var(--cat-is-bg);--fg:var(--cat-is-fg);--ac:var(--cat-is)}
+.c-kisisel{--bg:var(--cat-kisisel-bg);--fg:var(--cat-kisisel-fg);--ac:var(--cat-kisisel)}
+.c-sinav{--bg:var(--cat-sinav-bg);--fg:var(--cat-sinav-fg);--ac:var(--cat-sinav)}
+.c-sosyal{--bg:var(--cat-sosyal-bg);--fg:var(--cat-sosyal-fg);--ac:var(--cat-sosyal)}
+.c-diger{--bg:var(--cat-diger-bg);--fg:var(--cat-diger-fg);--ac:var(--cat-diger)}
