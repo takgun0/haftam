@@ -14,7 +14,7 @@
 > Tarayıcı verilerini temizlersen ya da başka bir cihaz/tarayıcı kullanırsan programın görünmez.
 > **Ayarlar › Veri › Yedek al** ile düzenli olarak JSON yedeği indir.
 
-**Yayın adresi:** _(yayımlandıktan sonra eklenecek)_
+**Yayın adresi:** https://takgun0.github.io/haftam/
 
 ## Klavye kısayolları
 
